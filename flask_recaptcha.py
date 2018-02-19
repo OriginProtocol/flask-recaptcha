@@ -60,9 +60,14 @@ class ReCaptcha(object):
 
         @app.context_processor
         def get_code():
-            return dict(recaptcha=Markup(self.get_code()))
+            def _get_code(form_id=None,
+                          callback=None,):
+                return Markup(self.get_code(form_id=form_id,
+                                            callback=callback))
+            return dict(recaptcha=_get_code)
 
-    def get_code(self):
+    def get_code(self, form_id=None,
+                 callback=None):
         """
         Returns the new ReCaptcha code
         :return:
@@ -79,22 +84,38 @@ class ReCaptcha(object):
                             fields = captcha.getElementsByTagName('textarea');
                         if(!fields.length) return;
                         fields[0].value = token;
+                        if({CALLBACK}){{
+                          {CALLBACK}();
+                        }}
                       }};
                       var recaptchaOnloadCallback = function(){{
-                        var el = document.getElementById("{ELEMENT_ID}"),
-                            widget_id,
-                            opts = [];
-                        opts['sitekey'] = "{SITE_KEY}";
-                        opts['callback'] = 'recaptchaCallback';
-                        opts['size'] = "{SIZE}";
-                        widget_id = grecaptcha.render(el, opts);
-                        grecaptcha.execute(widget_id);
+                             var el = document.getElementById("{ELEMENT_ID}"),
+                             widget_id,
+                             opts = [];
+                         opts['sitekey'] = "{SITE_KEY}";
+                         opts['callback'] = 'recaptchaCallback';
+                         opts['size'] = "{SIZE}";
+                         recaptchaId = grecaptcha.render(el, opts);
                       }};
+
+                      document.getElementById("{FORM_ID}").addEventListener("submit", function(event){{
+                        event.preventDefault()
+                        var token =   grecaptcha.getResponse(recaptchaId);
+                        // if token is not found, it means that user dodged the
+                        // recaptcha somehow. Execute grecatcha again
+                        if (!token) {{
+                          // trigger validation
+                          grecaptcha.execute(recaptchaId);
+                          return;
+                        }}
+                      }});
                     </script>
-                    <script src="https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback&render=explicit" async defer></script>
+                    <script src="https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback&render=explicit"></script>
                     """.format(SITE_KEY=self.site_key,
                                SIZE=self.size,
-                               ELEMENT_ID=self.element_id
+                               ELEMENT_ID=self.element_id,
+                               CALLBACK=callback,
+                               FORM_ID=form_id
                                )
             else:
                 return """

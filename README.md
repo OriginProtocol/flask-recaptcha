@@ -31,13 +31,22 @@ Can also be used as standalone
 Inside of the form you want to protect, include the tag: **{{ recaptcha }}**
 
 It will insert the code automatically
+If using Invisible reCAPTCHA
+    <form id="my-form" method="post" action="/submit">
+        ... your field
+        ... your field
 
+        {{ recaptcha(my-form, onSubmitCallback) }}
 
+        [submit button]
+    </form>
+
+If using reCAPTCHA 
     <form method="post" action="/submit">
         ... your field
         ... your field
 
-        {{ recaptcha }}
+        {{ recaptcha() }}
 
         [submit button]
     </form>
@@ -79,7 +88,7 @@ Returns bool
 
 ## In Template
 
-Just include **{{ recaptcha }}** wherever you want to show the recaptcha
+Just include **{{ recaptcha() }}** wherever you want to show the recaptcha
 
 
 ## Config
